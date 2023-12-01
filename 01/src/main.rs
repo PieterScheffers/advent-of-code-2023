@@ -27,7 +27,7 @@ pub fn get_first_and_last_digits(str: &str) -> u32 {
             .map(|&x| x)
             .collect();
 
-        let matched = match_number(&last_five_chars);
+        let matched = match_number(&last_five_chars, true);
 
         if ch.is_numeric() {
             first_number = ch;
@@ -54,7 +54,7 @@ pub fn get_first_and_last_digits(str: &str) -> u32 {
             .collect();
 
         let last_five_chars_turned_back = rev_last_five_chars.iter().rev().map(|&x| x).collect();
-        let matched = match_number(&last_five_chars_turned_back);
+        let matched = match_number(&last_five_chars_turned_back, false);
 
         if ch.is_numeric() {
             last_number = ch;
@@ -76,10 +76,19 @@ pub fn get_first_and_last_digits(str: &str) -> u32 {
         .expect("Found number characters should be valid numbers")
 }
 
-fn match_number(last_five_chars_input: &Vec<char>) -> Result<char, String> {
+fn match_number(last_five_chars_input: &Vec<char>, is_left_to_right: bool) -> Result<char, String> {
     let last_five_chars = &last_five_chars_input.clone();
-    let last_four_chars: Vec<_> = last_five_chars.iter().rev().take(4).rev().collect();
-    let last_three_chars: Vec<_> = last_five_chars.iter().rev().take(3).rev().collect();
+    let last_four_chars: Vec<_> = if is_left_to_right {
+        last_five_chars.iter().rev().take(4).rev().collect()
+    } else {
+        last_five_chars.iter().take(4).collect()
+    };
+
+    let last_three_chars: Vec<_> = if is_left_to_right {
+        last_five_chars.iter().rev().take(3).rev().collect()
+    } else {
+        last_five_chars.iter().take(3).collect()
+    };
 
     let last_five_chars = &String::from_iter(last_five_chars)[..];
     let last_four_chars = &String::from_iter(last_four_chars)[..];
