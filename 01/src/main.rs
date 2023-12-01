@@ -1,7 +1,12 @@
 use std::fs::read_to_string;
 
 fn main() {
-    part_one();
+    let lines = read_lines("input.txt");
+    let lines: Vec<&str> = lines.iter().map(|s| s as &str).collect();
+    // println!("{:?}", lines);
+
+    let result = add_number_strings(lines);
+    println!("{}", result);
 }
 
 pub fn get_first_and_last_digits(str: &str) -> u32 {
@@ -10,21 +15,57 @@ pub fn get_first_and_last_digits(str: &str) -> u32 {
     let mut first_number: char = '0';
     let mut last_number: char = '0';
 
+    let mut last_five_chars: Vec<char> = vec![];
+
     for ch in chars {
+        last_five_chars.push(ch);
+        last_five_chars = last_five_chars
+            .iter()
+            .rev()
+            .take(5)
+            .rev()
+            .map(|&x| x)
+            .collect();
+
+        let matched = match_number(&last_five_chars);
+
         if ch.is_numeric() {
             first_number = ch;
             break;
-        }
-    }
-
-    let reversed_chars: Vec<_> = str.chars().rev().collect();
-
-    for ch in reversed_chars {
-        if ch.is_numeric() {
-            last_number = ch;
+        } else if matched.is_ok() {
+            first_number = matched.unwrap();
             break;
         }
     }
+
+    // println!("first_number {}", first_number);
+
+    let reversed_chars: Vec<_> = str.chars().rev().collect();
+    let mut rev_last_five_chars: Vec<char> = vec![];
+
+    for ch in reversed_chars {
+        rev_last_five_chars.push(ch);
+        rev_last_five_chars = rev_last_five_chars
+            .iter()
+            .rev()
+            .take(5)
+            .rev()
+            .map(|&x| x)
+            .collect();
+
+        let last_five_chars_turned_back = rev_last_five_chars.iter().rev().map(|&x| x).collect();
+        let matched = match_number(&last_five_chars_turned_back);
+
+        if ch.is_numeric() {
+            last_number = ch;
+            break;
+        } else if matched.is_ok() {
+            last_number = matched.unwrap();
+            break;
+        }
+    }
+
+    // println!("last_number {}", last_number);
 
     let mut number_string = String::from(first_number);
     number_string.push(last_number);
@@ -35,12 +76,50 @@ pub fn get_first_and_last_digits(str: &str) -> u32 {
         .expect("Found number characters should be valid numbers")
 }
 
+fn match_number(last_five_chars_input: &Vec<char>) -> Result<char, String> {
+    let last_five_chars = &last_five_chars_input.clone();
+    let last_four_chars: Vec<_> = last_five_chars.iter().rev().take(4).rev().collect();
+    let last_three_chars: Vec<_> = last_five_chars.iter().rev().take(3).rev().collect();
+
+    let last_five_chars = &String::from_iter(last_five_chars)[..];
+    let last_four_chars = &String::from_iter(last_four_chars)[..];
+    let last_three_chars = &String::from_iter(last_three_chars)[..];
+
+    // println!("last_five_chars: {:?}", last_five_chars);
+    // println!("last_four_chars: {:?}", last_four_chars);
+    // println!("last_three_chars: {:?}", last_three_chars);
+    // println!("");
+
+    match &last_three_chars[..] {
+        "one" => return Ok('1'),
+        "two" => return Ok('2'),
+        "six" => return Ok('6'),
+        _ => {}
+    }
+
+    match &last_four_chars[..] {
+        "four" => return Ok('4'),
+        "five" => return Ok('5'),
+        "nine" => return Ok('9'),
+        _ => {}
+    }
+
+    match &last_five_chars[..] {
+        "three" => return Ok('3'),
+        "seven" => return Ok('7'),
+        "eight" => return Ok('8'),
+        _ => {}
+    }
+
+    return Err("Chars not matched".to_string());
+}
+
 pub fn add_number_strings(strings: Vec<&str>) -> u32 {
     strings
         .iter()
         .map(|&x| get_first_and_last_digits(x))
         .reduce(|a, b| a + b)
-        .expect("blaga")
+        .expect("Couldn't sum all numbers in u32 vector")
 }
 
 fn read_lines(filename: &str) -> Vec<String> {
@@ -49,15 +128,6 @@ fn read_lines(filename: &str) -> Vec<String> {
         .lines() // split the string into an iterator of string slices
         .map(String::from) // make each slice into a string
         .collect() // gather them together into a vector
-}
-
-fn part_one() {
-    let lines = read_lines("input.txt");
-    let lines: Vec<&str> = lines.iter().map(|s| s as &str).collect();
-    // println!("{:?}", lines);
-
-    let result = add_number_strings(lines);
-    println!("{}", result);
 }
 
 #[cfg(test)]
@@ -101,5 +171,21 @@ mod tests {
         ];
         let result = add_number_strings(numbers);
         assert_eq!(result, 281);
+    }
+
+    #[test]
+    fn match_number_test() {
+        assert_eq!(match_number(&vec!['o', 'n', 'e']).unwrap(), '1');
+        assert_eq!(match_number(&vec!['k', 'k', 'o', 'n', 'e']).unwrap(), '1');
+        assert_eq!(match_number(&vec!['t', 'w', 'o']).unwrap(), '2');
+        assert_eq!(match_number(&vec!['3', '3', 't', 'w', 'o']).unwrap(), '2');
+        assert_eq!(match_number(&vec!['t', 'h', 'r', 'e', 'e']).unwrap(), '3');
+        assert_eq!(match_number(&vec!['f', 'o', 'u', 'r']).unwrap(), '4');
+        assert_eq!(match_number(&vec!['f', 'i', 'v', 'e']).unwrap(), '5');
+        assert_eq!(match_number(&vec!['s', 'i', 'x']).unwrap(), '6');
+        assert_eq!(match_number(&vec!['k', '8', 's', 'i', 'x']).unwrap(), '6');
+        assert_eq!(match_number(&vec!['s', 'e', 'v', 'e', 'n']).unwrap(), '7');
+        assert_eq!(match_number(&vec!['e', 'i', 'g', 'h', 't']).unwrap(), '8');
+        assert_eq!(match_number(&vec!['n', 'i', 'n', 'e']).unwrap(), '9');
     }
 }
