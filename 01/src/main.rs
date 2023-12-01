@@ -184,17 +184,35 @@ mod tests {
 
     #[test]
     fn match_number_test() {
-        assert_eq!(match_number(&vec!['o', 'n', 'e']).unwrap(), '1');
-        assert_eq!(match_number(&vec!['k', 'k', 'o', 'n', 'e']).unwrap(), '1');
-        assert_eq!(match_number(&vec!['t', 'w', 'o']).unwrap(), '2');
-        assert_eq!(match_number(&vec!['3', '3', 't', 'w', 'o']).unwrap(), '2');
-        assert_eq!(match_number(&vec!['t', 'h', 'r', 'e', 'e']).unwrap(), '3');
-        assert_eq!(match_number(&vec!['f', 'o', 'u', 'r']).unwrap(), '4');
-        assert_eq!(match_number(&vec!['f', 'i', 'v', 'e']).unwrap(), '5');
-        assert_eq!(match_number(&vec!['s', 'i', 'x']).unwrap(), '6');
-        assert_eq!(match_number(&vec!['k', '8', 's', 'i', 'x']).unwrap(), '6');
-        assert_eq!(match_number(&vec!['s', 'e', 'v', 'e', 'n']).unwrap(), '7');
-        assert_eq!(match_number(&vec!['e', 'i', 'g', 'h', 't']).unwrap(), '8');
-        assert_eq!(match_number(&vec!['n', 'i', 'n', 'e']).unwrap(), '9');
+        assert_eq!(match_number(&vec!['o', 'n', 'e'], true).unwrap(), '1');
+        assert_eq!(
+            match_number(&vec!['k', 'k', 'o', 'n', 'e'], true).unwrap(),
+            '1'
+        );
+        assert_eq!(match_number(&vec!['t', 'w', 'o'], true).unwrap(), '2');
+        assert_eq!(
+            match_number(&vec!['3', '3', 't', 'w', 'o'], true).unwrap(),
+            '2'
+        );
+        assert_eq!(
+            match_number(&vec!['t', 'h', 'r', 'e', 'e'], true).unwrap(),
+            '3'
+        );
+        assert_eq!(match_number(&vec!['f', 'o', 'u', 'r'], true).unwrap(), '4');
+        assert_eq!(match_number(&vec!['f', 'i', 'v', 'e'], true).unwrap(), '5');
+        assert_eq!(match_number(&vec!['s', 'i', 'x'], true).unwrap(), '6');
+        assert_eq!(
+            match_number(&vec!['k', '8', 's', 'i', 'x'], true).unwrap(),
+            '6'
+        );
+        assert_eq!(
+            match_number(&vec!['s', 'e', 'v', 'e', 'n'], true).unwrap(),
+            '7'
+        );
+        assert_eq!(
+            match_number(&vec!['e', 'i', 'g', 'h', 't'], true).unwrap(),
+            '8'
+        );
+        assert_eq!(match_number(&vec!['n', 'i', 'n', 'e'], true).unwrap(), '9');
     }
 }
