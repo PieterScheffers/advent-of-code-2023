@@ -66,17 +66,40 @@ mod tests {
 
     #[test]
     fn get_first_and_last_digits_test() {
+        // Part one
         assert_eq!(get_first_and_last_digits("1abc2"), 12);
         assert_eq!(get_first_and_last_digits("pqr3stu8vwx"), 38);
         assert_eq!(get_first_and_last_digits("a1b2c3d4e5f"), 15);
         assert_eq!(get_first_and_last_digits("treb7uchet"), 77);
+
+        // Part two
+        assert_eq!(get_first_and_last_digits("two1nine"), 29);
+        assert_eq!(get_first_and_last_digits("eightwothree"), 83);
+        assert_eq!(get_first_and_last_digits("abcone2threexyz"), 13);
+        assert_eq!(get_first_and_last_digits("xtwone3four"), 24);
+        assert_eq!(get_first_and_last_digits("4nineeightseven2"), 42);
+        assert_eq!(get_first_and_last_digits("zoneight234"), 14);
+        assert_eq!(get_first_and_last_digits("7pqrstsixteen"), 76);
     }
 
     #[test]
     fn add_number_strings_test() {
+        // Part one
         let numbers = vec!["1abc2", "pqr3stu8vwx", "a1b2c3d4e5f", "treb7uchet"];
         let result = add_number_strings(numbers);
-
         assert_eq!(result, 142);
+
+        // Part two
+        let numbers = vec![
+            "two1nine",
+            "eightwothree",
+            "abcone2threexyz",
+            "xtwone3four",
+            "4nineeightseven2",
+            "zoneight234",
+            "7pqrstsixteen",
+        ];
+        let result = add_number_strings(numbers);
+        assert_eq!(result, 281);
     }
 }
