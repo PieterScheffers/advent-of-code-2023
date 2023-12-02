@@ -1,27 +1,3 @@
-// use std::fs::read_to_string;
-
-// fn main() {
-//     let lines = read_lines("input.txt");
-//     let lines: Vec<&str> = lines.iter().map(|s| s as &str).collect();
-// }
-
-// fn read_lines(filename: &str) -> Vec<String> {
-//     read_to_string(filename)
-//         .unwrap() // panic on possible file-reading errors
-//         .lines() // split the string into an iterator of string slices
-//         .map(String::from) // make each slice into a string
-//         .collect() // gather them together into a vector
-// }
-
-// fn check_line_validates() {
-//     // split by :
-//     // split on ;
-//     // split on ,
-//     // split on space
-//     // left side = number, right side = color
-
-// }
-
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -32,7 +8,8 @@ const MAX_GREEN_CUBES: u32 = 13;
 const MAX_BLUE_CUBES: u32 = 14;
 
 fn main() {
-    let mut total: u32 = 0;
+    let mut total_part_one: u32 = 0;
+    let mut total_part_two: u32 = 0;
 
     // File hosts.txt must exist in the current path
     if let Ok(lines) = read_lines("input.txt") {
@@ -40,13 +17,16 @@ fn main() {
         for line_result in lines {
             if let Ok(line) = line_result {
                 if is_line_valid(&line) {
-                    total += get_game_number_from_line(&line);
+                    total_part_one += get_game_number_from_line(&line);
                 }
+
+                total_part_two += get_power_of_minimum_cubes(&line);
             }
         }
     }
 
-    println!("Total: {}", total)
+    println!("Total part 1: {}", total_part_one);
+    println!("Total part 2: {}", total_part_two);
 }
 
 // The output is wrapped in a Result to allow matching on errors
@@ -60,6 +40,27 @@ where
 }
 
 fn is_line_valid(line: &str) -> bool {
+    let cube_grabs = get_hash_vector_from_line(line);
+
+    is_game_valid(cube_grabs)
+}
+
+fn get_game_number_from_line(line: &str) -> u32 {
+    let mut split_by_colon = line.split(":").take(1);
+
+    split_by_colon
+        .next()
+        .unwrap()
+        .split(" ")
+        .skip(1)
+        .take(1)
+        .next()
+        .unwrap()
+        .parse()
+        .expect("Game should be an integer")
+}
+
+fn get_hash_vector_from_line(line: &str) -> Vec<HashMap<&str, u32>> {
     let mut split_by_colon = line.split(":").take(2).skip(1);
 
     // 14 green, 3 red, 16 blue; 3 blue, 6 green; 12 green, 6 blue, 2 red
@@ -79,55 +80,13 @@ fn is_line_valid(line: &str) -> bool {
     //         red: 2
     //     }
     // ]
-    let cube_grabs: Vec<HashMap<&str, u32>> = split_by_colon
+    split_by_colon
         .next()
         .unwrap()
         .split(";")
         .map(|x| x.trim())
         .map(|x| parse_grab(x))
-        .collect();
-
-    // println!("g: {}", game);
-
-    // let mut index: u32 = 0;
-
-    // for cube_grab in cube_grabs {
-    //     for (color, quantity) in cube_grab.into_iter() {
-    //         println!("Index:{}, {} / {}", index, color, quantity);
-
-    //         // match &color[..] {
-    //         //     "red" => return Ok('1'),
-    //         //     "green" => return Ok('2'),
-    //         //     "blue" => return Ok('6'),
-    //         //     _ => {}
-    //         // }
-    //     }
-
-    //     index = index + 1;
-    // }
-
-    // println!("");
-
-    let is_valid = is_game_valid(cube_grabs);
-
-    // println!("IsValid: {}", is_valid);
-
-    is_valid
-}
-
-fn get_game_number_from_line(line: &str) -> u32 {
-    let mut split_by_colon = line.split(":").take(1);
-
-    split_by_colon
-        .next()
-        .unwrap()
-        .split(" ")
-        .skip(1)
-        .take(1)
-        .next()
-        .unwrap()
-        .parse()
-        .expect("Game should be an integer")
+        .collect()
 }
 
 fn parse_grab(cubes_str: &str) -> HashMap<&str, u32> {
@@ -171,4 +130,115 @@ fn is_color_valid((color, quantity): (&str, u32)) -> bool {
     // println!("Color: {}, qty: {}, result: {}", color, quantity, result);
 
     result
+}
+
+fn get_power_of_minimum_cubes(line: &str) -> u32 {
+    let minimum_cubes = get_minimum_cubes(line);
+
+    let mut power: u32 = 1;
+
+    for (_, quantity) in minimum_cubes.into_iter() {
+        power = power * quantity;
+    }
+
+    power
+}
+
+fn get_minimum_cubes(line: &str) -> HashMap<&str, u32> {
+    let cube_grabs = get_hash_vector_from_line(line);
+
+    let mut minimum_cubes: HashMap<&str, u32> = HashMap::new();
+
+    for cube_grab in cube_grabs {
+        for (color, quantity) in cube_grab.into_iter() {
+            let current_minimum = minimum_cubes.get(color).unwrap_or_else(|| &0);
+
+            if current_minimum < &quantity {
+                minimum_cubes.insert(color, quantity);
+            }
+        }
+    }
+
+    minimum_cubes
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_minimum_cubes_test() {
+        let line = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green";
+        let minimums = get_minimum_cubes(line);
+
+        assert_eq!(minimums.contains_key("blue"), true);
+        assert_eq!(minimums.contains_key("red"), true);
+        assert_eq!(minimums.contains_key("green"), true);
+
+        assert_eq!(minimums.get("blue").unwrap().to_owned(), 6);
+        assert_eq!(minimums.get("red").unwrap().to_owned(), 4);
+        assert_eq!(minimums.get("green").unwrap().to_owned(), 2);
+
+        let line = "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue";
+        let minimums = get_minimum_cubes(line);
+
+        assert_eq!(minimums.contains_key("blue"), true);
+        assert_eq!(minimums.contains_key("red"), true);
+        assert_eq!(minimums.contains_key("green"), true);
+
+        assert_eq!(minimums.get("blue").unwrap().to_owned(), 4);
+        assert_eq!(minimums.get("red").unwrap().to_owned(), 1);
+        assert_eq!(minimums.get("green").unwrap().to_owned(), 3);
+
+        let line = "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red";
+        let minimums = get_minimum_cubes(line);
+
+        assert_eq!(minimums.contains_key("blue"), true);
+        assert_eq!(minimums.contains_key("red"), true);
+        assert_eq!(minimums.contains_key("green"), true);
+
+        assert_eq!(minimums.get("blue").unwrap().to_owned(), 6);
+        assert_eq!(minimums.get("red").unwrap().to_owned(), 20);
+        assert_eq!(minimums.get("green").unwrap().to_owned(), 13);
+
+        let line = "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red";
+        let minimums = get_minimum_cubes(line);
+
+        assert_eq!(minimums.contains_key("blue"), true);
+        assert_eq!(minimums.contains_key("red"), true);
+        assert_eq!(minimums.contains_key("green"), true);
+
+        assert_eq!(minimums.get("blue").unwrap().to_owned(), 15);
+        assert_eq!(minimums.get("red").unwrap().to_owned(), 14);
+        assert_eq!(minimums.get("green").unwrap().to_owned(), 3);
+
+        let line = "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+        let minimums = get_minimum_cubes(line);
+
+        assert_eq!(minimums.contains_key("blue"), true);
+        assert_eq!(minimums.contains_key("red"), true);
+        assert_eq!(minimums.contains_key("green"), true);
+
+        assert_eq!(minimums.get("blue").unwrap().to_owned(), 2);
+        assert_eq!(minimums.get("red").unwrap().to_owned(), 6);
+        assert_eq!(minimums.get("green").unwrap().to_owned(), 3);
+    }
+
+    #[test]
+    fn get_power_of_minimum_cubes_test() {
+        let line = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green";
+        assert_eq!(get_power_of_minimum_cubes(line), 48);
+
+        let line = "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue";
+        assert_eq!(get_power_of_minimum_cubes(line), 12);
+
+        let line = "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red";
+        assert_eq!(get_power_of_minimum_cubes(line), 1560);
+
+        let line = "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red";
+        assert_eq!(get_power_of_minimum_cubes(line), 630);
+
+        let line = "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+        assert_eq!(get_power_of_minimum_cubes(line), 36);
+    }
 }
