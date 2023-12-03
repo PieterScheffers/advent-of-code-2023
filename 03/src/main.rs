@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::read_to_string;
 
 // Point = (x, y)
@@ -15,7 +16,7 @@ struct MachineNumber {
 }
 
 impl MachineNumber {
-    fn get_value(&self) -> u32 {
+    fn get_value(&self) -> u64 {
         let chars: Vec<String> = self.cells.iter().map(|x| x.ch.to_string()).collect();
         chars.join("").parse().expect("Value should be a number")
     }
@@ -23,6 +24,12 @@ impl MachineNumber {
     fn has_adjacent_symbol(&self, board: &Vec<Vec<char>>) -> bool {
         self.cells.iter().fold(false, |acc, cell| {
             acc || has_adjacent_symbol(board, (cell.x, cell.y))
+        })
+    }
+
+    fn get_adjacent_stars(&self, board: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
+        self.cells.iter().fold(vec![], |acc, cell| {
+            [&get_adjacent_stars(board, (cell.x, cell.y))[..], &acc[..]].concat()
         })
     }
 }
@@ -46,6 +53,9 @@ fn main() {
 
     let result_part_one = part_one(read_file("input.txt"));
     println!("result_part_one: {}", result_part_one);
+
+    let result_part_two = part_two(read_file("input.txt"));
+    println!("result_part_two: {}", result_part_two);
 }
 
 fn read_file(filename: &str) -> String {
@@ -166,28 +176,64 @@ fn has_adjacent_symbol(board: &Vec<Vec<char>>, (x, y): (usize, usize)) -> bool {
     false
 }
 
-fn part_one(result: String) -> u32 {
-    let board = parse_input(result);
+fn get_adjacent_stars(board: &Vec<Vec<char>>, (x, y): (usize, usize)) -> Vec<(usize, usize)> {
+    let cells: Vec<(usize, usize)> = get_adjacent_cells(board, (x, y));
+
+    let error_message = &format!("Should be able to get cells x:{}, y:{}", x, y);
+
+    let mut star_cells: Vec<(usize, usize)> = vec![];
+
+    for (x, y) in cells {
+        let ch = board
+            .get(y)
+            .expect(error_message)
+            .get(x)
+            .expect(error_message);
+
+        if *ch == '*' {
+            star_cells.push((x, y));
+        }
+    }
+
+    star_cells
+}
+
+fn coordinate_to_string((x, y): (usize, usize)) -> String {
+    format!("{}{}", x, y)
+}
+
+fn get_gears<'a>(
+    board: &Vec<Vec<char>>,
+    machine_numbers: &'a Vec<MachineNumber>,
+) -> HashMap<String, Vec<&'a MachineNumber>> {
+    let mut gears: HashMap<String, Vec<&MachineNumber>> = HashMap::new();
+
+    for machine_number in machine_numbers {
+        let stars = machine_number.get_adjacent_stars(&board);
+
+        for star_coor in stars {
+            let coor_str = coordinate_to_string(star_coor);
+
+            let result = gears.get_mut(&coor_str);
+
+            if result.is_some() {
+                let vec = result.unwrap();
+                vec.push(machine_number);
+                vec.dedup_by(|a, b| a.get_value() == b.get_value())
+            } else {
+                gears.insert(coor_str, vec![machine_number]);
+            }
+        }
+    }
+
+    gears
+}
+
+fn part_one(raw_input: String) -> u64 {
+    let board = parse_input(raw_input);
     let machine_numbers = get_numbers(&board);
 
-    // let n = machine_numbers
-    //     .iter()
-    //     .find(|x| x.get_value() == 467)
-    //     .expect("Cannot find 467 number");
-
-    // println!(
-    //     "has_adjacent_symbol: {}",
-    //     has_adjacent_symbol(&board, (3, 0))
-    // );
-
-    // println!(
-    //     "{:?}, {}, {}",
-    //     n,
-    //     n.get_value(),
-    //     n.has_adjacent_symbol(&board)
-    // );
-
-    let numbers: Vec<u32> = machine_numbers
+    let numbers: Vec<u64> = machine_numbers
         .iter()
         .filter(|x| x.has_adjacent_symbol(&board))
         .map(|x| x.get_value())
@@ -196,9 +242,34 @@ fn part_one(result: String) -> u32 {
     numbers.iter().fold(0, |acc, num| acc + num)
 }
 
-// Parse input
-// get all numbers with coordinates
-//
+fn part_two(raw_input: String) -> u64 {
+    let board = parse_input(raw_input);
+
+    let machine_numbers: Vec<MachineNumber> = get_numbers(&board);
+
+    let gears = get_gears(&board, &machine_numbers);
+
+    // println!("gears.len {}", gears.len());
+
+    // let i: Vec<Vec<u32>> = gears
+    //     .into_iter()
+    //     .map(|(_, machine_numbers)| machine_numbers.into_iter().map(|x| x.get_value()).collect())
+    //     .collect();
+
+    // print!("gears machine numbers: {:?}", i);
+
+    // 5
+
+    gears
+        .into_iter()
+        .filter(|(_, machine_numbers)| machine_numbers.len() > 1)
+        .map(|(_, machine_numbers)| {
+            machine_numbers
+                .into_iter()
+                .fold(1, |acc, num| acc * num.get_value())
+        })
+        .fold(0, |acc, n| acc + n)
+}
 
 #[cfg(test)]
 mod tests {
@@ -337,6 +408,28 @@ mod tests {
         let result_part_one = part_one(board_string);
 
         assert_eq!(result_part_one, 4361);
+    }
+
+    #[test]
+    fn can_solve_part_two() {
+        let board_string = r#"
+            467..114..
+            ...*......
+            ..35..633.
+            ......#...
+            617*......
+            .....+.58.
+            ..592.....
+            ......755.
+            ...$.*....
+            .664.598..
+        "#
+        .trim()
+        .to_string();
+
+        let result_part_two = part_two(board_string);
+
+        assert_eq!(result_part_two, 467835);
     }
 
     #[test]
