@@ -313,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn get_first_and_last_digits_test() {
+    fn can_get_adjacent_cells() {
         let test_board: Vec<Vec<char>> = vec![
             vec!['4', '6', '7', '.', '.', '1', '1', '4', '.', '.'],
             vec!['.', '.', '.', '*', '.', '.', '.', '.', '.', '.'],
