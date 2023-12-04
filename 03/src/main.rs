@@ -28,9 +28,13 @@ impl MachineNumber {
     }
 
     fn get_adjacent_stars(&self, board: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
-        self.cells.iter().fold(vec![], |acc, cell| {
+        let mut stars: Vec<(usize, usize)> = self.cells.iter().fold(vec![], |acc, cell| {
             [&get_adjacent_stars(board, (cell.x, cell.y))[..], &acc[..]].concat()
-        })
+        });
+
+        stars.dedup_by(|a, b| a.0 == b.0 && a.1 == b.1);
+
+        stars
     }
 }
 
@@ -219,7 +223,6 @@ fn get_gears<'a>(
             if result.is_some() {
                 let vec = result.unwrap();
                 vec.push(machine_number);
-                vec.dedup_by(|a, b| a.cells[0].x == b.cells[0].x && a.cells[0].y == b.cells[0].y)
             } else {
                 gears.insert(coor_str, vec![machine_number]);
             }
@@ -251,7 +254,7 @@ fn part_two(raw_input: String) -> u64 {
 
     let gears = get_gears(&board, &machine_numbers);
 
-    println!("gears {:?}", gears);
+    // println!("gears {:?}", gears);
 
     // let i: Vec<Vec<u64>> = gears
     //     .into_iter()
