@@ -219,7 +219,7 @@ fn get_gears<'a>(
             if result.is_some() {
                 let vec = result.unwrap();
                 vec.push(machine_number);
-                vec.dedup_by(|a, b| a.get_value() == b.get_value())
+                vec.dedup_by(|a, b| a.cells[0].x == b.cells[0].x && a.cells[0].y == b.cells[0].y)
             } else {
                 gears.insert(coor_str, vec![machine_number]);
             }
@@ -247,11 +247,13 @@ fn part_two(raw_input: String) -> u64 {
 
     let machine_numbers: Vec<MachineNumber> = get_numbers(&board);
 
+    // print!("machine_numbers: {:?}", machine_numbers);
+
     let gears = get_gears(&board, &machine_numbers);
 
-    // println!("gears.len {}", gears.len());
+    println!("gears {:?}", gears);
 
-    // let i: Vec<Vec<u32>> = gears
+    // let i: Vec<Vec<u64>> = gears
     //     .into_iter()
     //     .map(|(_, machine_numbers)| machine_numbers.into_iter().map(|x| x.get_value()).collect())
     //     .collect();
