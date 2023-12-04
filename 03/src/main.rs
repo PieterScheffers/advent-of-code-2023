@@ -199,7 +199,7 @@ fn get_adjacent_stars(board: &Vec<Vec<char>>, (x, y): (usize, usize)) -> Vec<(us
 }
 
 fn coordinate_to_string((x, y): (usize, usize)) -> String {
-    format!("{}{}", x, y)
+    format!("{:0>3}{:0>3}", x, y)
 }
 
 fn get_gears<'a>(
@@ -372,9 +372,9 @@ mod tests {
 
         assert_eq!(machine_numbers.len(), 10);
 
-        let numbers: Vec<u32> = machine_numbers.iter().map(|x| x.get_value()).collect();
+        let numbers: Vec<u64> = machine_numbers.iter().map(|x| x.get_value()).collect();
 
-        let valid_numbers: Vec<u32> = machine_numbers
+        let valid_numbers: Vec<u64> = machine_numbers
             .iter()
             .filter(|x| x.has_adjacent_symbol(&board))
             .map(|x| x.get_value())
