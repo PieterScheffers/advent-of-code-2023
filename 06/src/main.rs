@@ -15,8 +15,6 @@ fn main() {
 
     let result_part_two = part_two(&input);
     println!("result_part_two: {}", result_part_two);
-
-    println!("Hello, world!");
 }
 
 fn read_file(filename: &str) -> String {
@@ -68,12 +66,30 @@ fn parse_input(raw_input: &String) -> Vec<(i64, i64)> {
     races
 }
 
+fn get_distance(time: i64, index: i64) -> i64 {
+    let running_time = time - index;
+    running_time * index
+}
+
+fn get_number_of_winning_races((time, record_distance): (i64, i64)) -> i64 {
+    let winning_distances: Vec<i64> = (1..time)
+        .into_iter()
+        .map(|num| get_distance(time, num))
+        .filter(|x| *x > record_distance)
+        .collect::<Vec<i64>>();
+
+    i64::try_from(winning_distances.len()).expect("Cannot transform usize into i64")
+}
+
 fn part_one(raw_input: &String) -> i64 {
     let races = parse_input(raw_input);
 
     println!("races: {:?}", races);
 
-    2
+    races
+        .iter()
+        .map(|race| get_number_of_winning_races(*race))
+        .fold(1, |acc, num| acc * num)
 }
 
 fn part_two(raw_input: &String) -> i64 {
