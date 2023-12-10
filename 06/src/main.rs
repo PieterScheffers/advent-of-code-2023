@@ -21,12 +21,12 @@ fn read_file(filename: &str) -> String {
     read_to_string(filename).expect(&format!("Should be able to read file {}", filename))
 }
 
-fn parse_input(raw_input: &String) -> Vec<(i64, i64)> {
+fn parse_input_one(raw_input: &String) -> Vec<(i64, i64)> {
     let first_line = raw_input
         .lines()
         .into_iter()
         .take(1)
-        .reduce(|acc, x| x)
+        .reduce(|_, x| x)
         .expect("Cannot get first line")
         .split(" ")
         .map(|x| x.trim())
@@ -38,7 +38,7 @@ fn parse_input(raw_input: &String) -> Vec<(i64, i64)> {
         .into_iter()
         .skip(1)
         .take(1)
-        .reduce(|acc, x| x)
+        .reduce(|_, x| x)
         .expect("Cannot get second line")
         .split(" ")
         .map(|x| x.trim())
@@ -66,6 +66,41 @@ fn parse_input(raw_input: &String) -> Vec<(i64, i64)> {
     races
 }
 
+fn parse_input_two(raw_input: &String) -> (i64, i64) {
+    let time = raw_input
+        .lines()
+        .into_iter()
+        .take(1)
+        .reduce(|_, x| x)
+        .expect("Cannot get first line")
+        .split(" ")
+        .map(|x| x.trim())
+        .filter(|x| x != &"")
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join("")
+        .parse()
+        .expect("Cannot parse time");
+
+    let distance = raw_input
+        .lines()
+        .into_iter()
+        .skip(1)
+        .take(1)
+        .reduce(|_, x| x)
+        .expect("Cannot get second line")
+        .split(" ")
+        .map(|x| x.trim())
+        .filter(|x| x != &"")
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join("")
+        .parse()
+        .expect("Cannot parse distance");
+
+    (time, distance)
+}
+
 fn get_distance(time: i64, index: i64) -> i64 {
     let running_time = time - index;
     running_time * index
@@ -82,9 +117,9 @@ fn get_number_of_winning_races((time, record_distance): (i64, i64)) -> i64 {
 }
 
 fn part_one(raw_input: &String) -> i64 {
-    let races = parse_input(raw_input);
+    let races = parse_input_one(raw_input);
 
-    println!("races: {:?}", races);
+    // println!("races: {:?}", races);
 
     races
         .iter()
@@ -93,5 +128,9 @@ fn part_one(raw_input: &String) -> i64 {
 }
 
 fn part_two(raw_input: &String) -> i64 {
-    2
+    let race = parse_input_two(raw_input);
+
+    // println!("race: {:?}", race);
+
+    get_number_of_winning_races(race)
 }
